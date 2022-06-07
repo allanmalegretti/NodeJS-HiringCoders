@@ -8,29 +8,56 @@ const port = 3000;
 
 const server = http.createServer((req, res) => {
 
-    let resposta;
+    var resposta;
     const urlparse = url.parse(req.url, true)
-
     const params = queryString.parse(urlparse.search);
     console.log(params);
 
-    // var fs = require('fs');
+    // Criar usuario
+    // http://localhost:3000/criar-atualizar-usuario?nome=allan&idade=36&id=1
+    if (urlparse.pathname == '/criar-atualizar-usuario') {
+        fs.writeFile('users/' + params.id + '.txt', JSON.stringify(params), function (err) {
+            if (err) throw err;
+            console.log('Criado!');
+            resposta = 'Usuario criado/atualizado com sucesso!';
 
-    fs.writeFile('users/' + params.id + '.txt', JSON.stringify(params), function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-    });
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'text/plain');
+            // res.setHeader('Content-Type', 'application/json');
+            res.end(resposta);
+        });
 
-    resposta = 'Usuario criado com sucesso';
+        // Selecionar usuario
+        // http://localhost:3000/selecionar-usuario?id=1
+    } else if (urlparse.pathname == '/selecionar-usuario') {
+        fs.readFile('users/' + params.id + '.txt', function (err, data) {
+            console.log('Selecionado!');
+            resposta = data;
 
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end(resposta);
+            res.statusCode = 200;
+            // res.setHeader('Content-Type', 'text/plain');
+            res.setHeader('Content-Type', 'application/json');
+            res.end(resposta);
+        });
+
+        // Remover usuario
+        // http://localhost:3000/remover-usuario?id=1
+    } else if (urlparse.pathname == '/remover-usuario') {
+        fs.unlink('users/' + params.id + '.txt', function (err) {
+            if (err) throw err;
+            console.log('Deletado!');
+            resposta = err ? "Usuario nao encontrado." : "Usuario removido.";
+
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'text/plain');
+            // res.setHeader('Content-Type', 'application/json');
+            res.end(resposta);
+        });
+    }
+
+    // console.log(resposta);
 });
 
 server.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
-
-//http://localhost:3000/criar-usuario?nome=allan&idade=36&id=1
-//http://localhost:3000/selecionar-usuario?id=2
